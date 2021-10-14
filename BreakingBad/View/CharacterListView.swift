@@ -9,7 +9,6 @@ import SwiftUI
 
 struct CharacterListView: View {
     @ObservedObject var viewModel = CharacterListViewModel()
-    @State var showSeasonPopover = false
     
     var body: some View {
         NavigationView {
@@ -17,31 +16,20 @@ struct CharacterListView: View {
                 NavigationLink(destination: CharacterDetailsView(character: character)) {
                     CharacterRowView(character: character)
                 }
-            }.refreshable {
-                viewModel.requestCharacters()
             }.searchable(text: $viewModel.searchText)
                 .navigationTitle("Breaking Bad")
                 .toolbar {
-                    Button("Season") {
-                        self.showSeasonPopover = true
+                    Picker("Seasons", selection: $viewModel.searchedSeason) {
+                        Text("Season (All)").tag(nil as Int?)
+                        ForEach(viewModel.seasons, id: \.self) { season in
+                            Text("Season: \(season)").tag(season as Int?)
+                        }
                     }
+                }.refreshable {
+                    viewModel.requestCharacters()
                 }
         }.onAppear {
             viewModel.requestCharacters()
-        }.sheet(isPresented: $showSeasonPopover) {
-            Text("Select Season")
-                .font(.headline)
-                .padding()
-            Picker("Seasons", selection: $viewModel.searchedSeason) {
-                Text("None").tag(nil as Int?)
-                ForEach(viewModel.seasons, id: \.self) { season in
-                    Text("\(season)").tag(season as Int?)
-                }
-            }.pickerStyle(.wheel)
-            Button("Confirm") {
-                self.showSeasonPopover = false
-            }
-            Spacer()
         }
     }
 }
