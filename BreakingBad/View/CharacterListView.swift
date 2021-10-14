@@ -26,10 +26,12 @@ struct CharacterListView: View {
                         }
                     }
                 }.refreshable {
-                    viewModel.requestCharacters()
+                    await viewModel.requestCharacters()
                 }
         }.onAppear {
-            viewModel.requestCharacters()
+            Task {
+                await viewModel.requestCharacters()
+            }
         }
     }
 }

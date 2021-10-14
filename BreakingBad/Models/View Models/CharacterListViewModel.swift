@@ -60,10 +60,23 @@ class CharacterListViewModel: ObservableObject {
         return characters
     }
     
-    func requestCharacters() {
-        Character.request()
-            .replaceError(with: [])
-            .receive(on: DispatchQueue.main)
-            .assign(to: &$characters)
+    @discardableResult
+    func requestCharacters() async -> [Character] {
+        await withCheckedContinuation({ continuation in
+            let requestPublisher = Character.request()
+                .replaceError(with: [])
+                .receive(on: DispatchQueue.main)
+                .handleEvents(receiveOutput: { characters in
+                    continuation.resume(returning:characters)
+                }, receiveCompletion: { completion in
+                    switch completion {
+                    case .failure:
+                        continuation.resume(returning:[])
+                    default:
+                        break
+                    }
+                })
+            requestPublisher.assign(to: &$characters)
+        })
     }
 }
